@@ -1,4 +1,4 @@
-# N64 Framebuffer
+# N64 Framebuffer Converter
 
 A single-page app for converting raw N64 framebuffer screenshot taken from an real N64 to PNG for distribution
 
