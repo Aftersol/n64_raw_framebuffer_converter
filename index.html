@@ -1,34 +1,3 @@
-<!--
-
-index.html -- A page providing the entire program for converting
-framebuffer saved from N64 to PNG
-
-This is free and unencumbered software released into the public domain.
-
-Anyone is free to copy, modify, publish, use, compile, sell, or
-distribute this software, either in source code form or as a compiled
-binary, for any purpose, commercial or non-commercial, and by any
-means.
-
-In jurisdictions that recognize copyright laws, the author or authors
-of this software dedicate any and all copyright interest in the
-software to the public domain. We make this dedication for the benefit
-of the public at large and to the detriment of our heirs and
-successors. We intend this dedication to be an overt act of
-relinquishment in perpetuity of all present and future rights to this
-software under copyright law.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
-
-For more information, please refer to <https://unlicense.org/>
---->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -100,6 +69,13 @@ For more information, please refer to <https://unlicense.org/>
     <h1>N64 Raw Framebuffer Converter</h1>
     
     <div class="settings-container">
+        <label for="preset">Preset:</label>
+        <select id="preset">
+            <option value="320x240">320x240</option>
+            <option value="640x480">640x480</option>
+            <option value="">Custom</option>
+        </select>
+
         <label for="width">Width:</label>
         <input type="number" id="width" value="320" min="1">
         
@@ -118,14 +94,13 @@ For more information, please refer to <https://unlicense.org/>
         <input type="file" id="fileInput" accept=".raw,image/*">
     </div>
     
-        <div id="output"></div>
+    <div id="output"></div>
     <div id="preview"></div>
     <div id="downloadContainer" style="display: flex; justify-content: center; align-items: center; margin-top: 20px;">
         <button id="downloadBtn" style="display: none; margin-top: 20px; padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
             Download PNG
         </button>
     </div>
-
 
     <script>
         const fileInput = document.getElementById('fileInput');
@@ -136,9 +111,21 @@ For more information, please refer to <https://unlicense.org/>
         const widthInput = document.getElementById('width');
         const heightInput = document.getElementById('height');
         const formatSelect = document.getElementById('format');
+        const presetSelect = document.getElementById('preset');
         
         let currentCanvas = null;
         let currentFileName = '';
+
+        presetSelect.addEventListener('change', () => {
+            const preset = presetSelect.value;
+            if (preset === '320x240') {
+                widthInput.value = 320;
+                heightInput.value = 240;
+            } else if (preset === '640x480') {
+                widthInput.value = 640;
+                heightInput.value = 480;
+            }
+        });
 
         uploadArea.addEventListener('click', () => fileInput.click());
 
@@ -174,7 +161,6 @@ For more information, please refer to <https://unlicense.org/>
         function handleFiles(files) {
             for (let file of files) {
                 output.innerHTML = `<strong>File uploaded:</strong> ${file.name}<br>Size: ${(file.size / 1024).toFixed(2)} KB`;
-                
                 onFileUpload(file);
             }
         }
@@ -206,7 +192,6 @@ For more information, please refer to <https://unlicense.org/>
                 const arrayBuffer = e.target.result;
                 const uint8Array = new Uint8Array(arrayBuffer);
                 
-                // Create canvas
                 const canvas = document.createElement('canvas');
                 canvas.width = width;
                 canvas.height = height;
@@ -225,7 +210,6 @@ For more information, please refer to <https://unlicense.org/>
                 preview.innerHTML = `<img src="${canvas.toDataURL('image/png')}" alt="${file.name}">`;
                 output.innerHTML += `<br>Converted ${format.toUpperCase()} (Big Endian) to PNG (${width}x${height})`;
                 
-                // Store canvas and filename for download
                 currentCanvas = canvas;
                 currentFileName = file.name;
                 downloadBtn.style.display = 'block';
@@ -234,21 +218,14 @@ For more information, please refer to <https://unlicense.org/>
         }
 
         function processRGBA16(uint8Array, data) {
-            // Process RGBA5551 (16-bit)
             for (let i = 0; i < uint8Array.length; i += 2) {
                 const pixelIndex = (i / 2);
                 const dataIndex = pixelIndex * 4;
-                
-                // Read big endian 16-bit value
                 const rgba16 = (uint8Array[i] << 8) | uint8Array[i + 1];
-                
-                // Extract RGBA5551 components
                 const r = (rgba16 >> 11) & 0x1F;
                 const g = (rgba16 >> 6) & 0x1F;
                 const b = (rgba16 >> 1) & 0x1F;
                 const a = rgba16 & 0x01;
-                
-                // Convert 5-bit to 8-bit
                 data[dataIndex] = (r << 3) | (r >> 2);
                 data[dataIndex + 1] = (g << 3) | (g >> 2);
                 data[dataIndex + 2] = (b << 3) | (b >> 2);
@@ -257,16 +234,13 @@ For more information, please refer to <https://unlicense.org/>
         }
 
         function processRGBA32(uint8Array, data) {
-            // Process RGBA8888 (32-bit)
             for (let i = 0; i < uint8Array.length; i += 4) {
                 const pixelIndex = (i / 4);
                 const dataIndex = pixelIndex * 4;
-                
-                // Read big endian 32-bit RGBA
-                data[dataIndex] = uint8Array[i];         // R
-                data[dataIndex + 1] = uint8Array[i + 1]; // G
-                data[dataIndex + 2] = uint8Array[i + 2]; // B
-                data[dataIndex + 3] = uint8Array[i + 3]; // A
+                data[dataIndex] = uint8Array[i];
+                data[dataIndex + 1] = uint8Array[i + 1];
+                data[dataIndex + 2] = uint8Array[i + 2];
+                data[dataIndex + 3] = uint8Array[i + 3];
             }
         }
     </script>
