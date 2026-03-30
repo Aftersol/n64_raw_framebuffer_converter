@@ -91,7 +91,7 @@
     
     <div class="upload-container" id="uploadArea">
         <p>Click to upload or drag and drop raw framebuffer files here</p>
-        <p>.raw files supported</p>
+        <p>.raw, .rgb, and .rgba files supported</p>
         <input type="file" id="fileInput" accept=".raw,image/*">
     </div>
     
@@ -170,8 +170,8 @@
         }
 
         function onFileUpload(file) {
-            if (file.type.startsWith('image/') || file.name.endsWith('.raw')) {
-                if (file.name.endsWith('.raw')) {
+            if (file.type.startsWith('image/') || file.name.endsWith('.raw') || file.name.endsWith('.rgb') || file.name.endsWith('.rgba')) {
+                if (file.name.endsWith('.raw') || file.name.endsWith('.rgb') || file.name.endsWith('.rgba')) {
                     processRawFile(file);
                 } else {
                     const reader = new FileReader();
@@ -182,7 +182,7 @@
                     reader.readAsDataURL(file);
                 }
             } else {
-                preview.innerHTML = '<p>Please upload an image file or .raw file.</p>';
+                preview.innerHTML = '<p>Please upload an image file, .raw, .rgb, or .rgba file.</p>';
             }
         }
 
